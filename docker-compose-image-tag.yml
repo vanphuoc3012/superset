@@ -37,6 +37,8 @@ services:
     restart: unless-stopped
     volumes:
       - redis:/data
+    networks:
+      - data-engineering-network
 
   db:
     env_file:
@@ -50,6 +52,8 @@ services:
     volumes:
       - db_home:/var/lib/postgresql/data
       - ./docker/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+    networks:
+      - data-engineering-network
 
   superset:
     env_file:
@@ -66,7 +70,9 @@ services:
       - 8088:8088
     depends_on: *superset-depends-on
     volumes: *superset-volumes
-
+    networks:
+      - data-engineering-network
+  
   superset-init:
     image: *superset-image
     container_name: superset_init
@@ -81,7 +87,9 @@ services:
     volumes: *superset-volumes
     healthcheck:
       disable: true
-
+    networks:
+      - data-engineering-network
+    
   superset-worker:
     image: *superset-image
     container_name: superset_worker
@@ -101,6 +109,8 @@ services:
           "CMD-SHELL",
           "celery -A superset.tasks.celery_app:app inspect ping -d celery@$$HOSTNAME",
         ]
+    networks:
+      - data-engineering-network
 
   superset-worker-beat:
     image: *superset-image
@@ -117,6 +127,8 @@ services:
     volumes: *superset-volumes
     healthcheck:
       disable: true
+    networks:
+      - data-engineering-network
 
 volumes:
   superset_home:
@@ -125,3 +137,8 @@ volumes:
     external: false
   redis:
     external: false
+
+networks:
+  data-engineering-network:
+    external: true
+    
